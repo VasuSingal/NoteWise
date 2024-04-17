@@ -2,13 +2,19 @@ import React, { useContext, useEffect, useState, useRef } from 'react'
 import noteContext from "../context/notes/noteContext"
 import NoteItem from './NoteItem';
 import AddNote from './AddNote';
+import {useNavigate} from 'react-router-dom'
 
-const Notes = () => {
+const Notes = (props) => {
   const context = useContext(noteContext);
   const { notes, getNotes, editNote } = context;
+  const navigate = useNavigate()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    getNotes()
+    if (localStorage.getItem("token")){
+      getNotes()
+    } else {
+      navigate("/login")
+    }
   }, []);
 
   const [note, setNote] = useState({ id: "", etitle: "", edescription: "", etag: "" })
@@ -17,6 +23,7 @@ const Notes = () => {
   const handleClick = (e) => {
     editNote(note.id, note.etitle, note.edescription, note.etag )
     refClose.current.click()
+    props.showAlert("Updated Successfully", "success")
   }
 
   // ...note means keep the properties as it is, just add or overwrite the next mentioned properties
@@ -26,7 +33,7 @@ const Notes = () => {
 
   return (
     <>
-      <AddNote />
+      <AddNote showAlert={props.showAlert} />
 
       <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div className="modal-dialog">
@@ -64,7 +71,7 @@ const Notes = () => {
           {notes.length===0 && "No Notes to display"}
         </div>
         {notes.map((note) => {
-          return <NoteItem key={note._id} note={note} setNote={setNote} />
+          return <NoteItem key={note._id} note={note} setNote={setNote} showAlert={props.showAlert} />
         })}
       </div>
     </>

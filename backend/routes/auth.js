@@ -14,11 +14,12 @@ router.post('/createuser', [
     body('email', 'Enter a valid email').isEmail(),
     body('password', 'Enter a strong password').isLength({ min: 5 }),
 ], async (req, res) => {
+    let success = false
 
     // If there are errors, return bad request and errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({success, errors: errors.array() });
     }
     // Check whether the user with the same email exists
 
@@ -27,7 +28,7 @@ router.post('/createuser', [
         // Finding whether the user with the same email exists
         let user = await User.findOne({ email: req.body.email });
         if (user) {
-            return res.status(400).json({ error: 'Please login with correct Credentials' })
+            return res.status(400).json({success, error: 'Please login with correct Credentials' })
         }
 
         // Encrypting the password using hash function and salt
@@ -49,8 +50,8 @@ router.post('/createuser', [
 
         //Making an authentication token, so that the same user can login without using mail and password
         const authtoken = jwt.sign(data, JWT_SECRET);
-
-        res.json({authtoken})
+        success = true;
+        res.json({success, authtoken})
 
     } catch (error) {
         console.log(error.message);
@@ -63,11 +64,12 @@ router.post('/login', [
     body('email', 'Enter a valid email').isEmail(),
     body('password', 'Password cannot be blank').exists()
 ], async (req, res) => {
+    let success = false
     
     // If there are errors, return bad request and errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({success, errors: errors.array() });
     }
     
     const {email, password} = req.body;
@@ -77,12 +79,12 @@ router.post('/login', [
         // Finding whether the user with the same email exists
         let user = await User.findOne({email});
         if (!user) {
-            return res.status(400).json({ error: 'Wrong Username or Password' })
+            return res.status(400).json({success, error: 'Wrong Username or Password' })
         }
 
         const passwordCompare = await bcrypt.compare(password, user.password)
         if (!passwordCompare) {
-            return res.status(400).json({ error: 'Wrong Username or Password' })
+            return res.status(400).json({success, error: 'Wrong Username or Password' })
         }
 
         const data = {
@@ -93,8 +95,8 @@ router.post('/login', [
 
         //Making an authentication token, so that the same user can login without using mail and password
         const authtoken = jwt.sign(data, JWT_SECRET);
-
-        res.json({authtoken})
+        success = true
+        res.json({success, authtoken})
 
     } catch (error) {
         console.log(error.message);
